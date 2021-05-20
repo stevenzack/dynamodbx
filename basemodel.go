@@ -158,6 +158,9 @@ func NewBaseModelWithCreated(region string, data interface{}) (*BaseModel, bool,
 					Create: &dynamodb.CreateGlobalSecondaryIndexAction{
 						IndexName: aws.String(ToIndexName(key)),
 						KeySchema: key,
+						Projection: 	&dynamodb.Projection{
+							ProjectionType: aws.String("ALL"),
+						}										,
 					},
 				})
 			}
