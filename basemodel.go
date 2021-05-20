@@ -42,6 +42,7 @@ func NewBaseModelWithCreated(region string, data interface{}) (*BaseModel, bool,
 		secondary: -1,
 		TableName: t.Name(),
 	}
+
 	if t.NumField() == 0 {
 		return nil, false, errors.New("Invalid struct [" + t.Name() + "] : no field in struct")
 	}
