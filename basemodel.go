@@ -115,6 +115,7 @@ func NewBaseModelWithCreated(region string, data interface{}) (*BaseModel, bool,
 		if strings.HasPrefix(e.Error(), dynamodb.ErrCodeResourceNotFoundException) {
 			//create table
 			req := &dynamodb.CreateTableInput{
+				TableName: &b.TableName,
 				KeySchema: []*dynamodb.KeySchemaElement{
 					{
 						AttributeName: aws.String(b.dbTags[0]),
