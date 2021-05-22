@@ -18,10 +18,8 @@ func ToDynamoDBType(t reflect.Type) (string, error) {
 		case reflect.Uint8:
 			// []byte
 			return "B", nil
-		case reflect.String:
-			return "SS", nil
-		case reflect.Uint16, reflect.Uint32, reflect.Uint, reflect.Uint64, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int, reflect.Int64, reflect.Float32, reflect.Float64:
-			return "NS", nil
+		case reflect.String, reflect.Uint16, reflect.Uint32, reflect.Uint, reflect.Uint64, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int, reflect.Int64, reflect.Float32, reflect.Float64:
+			return "L", nil
 		}
 	case reflect.Struct:
 		switch t.String() {
