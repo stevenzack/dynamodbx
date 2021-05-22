@@ -3,7 +3,16 @@ package dynamodbx
 import (
 	"errors"
 	"reflect"
+	"time"
+
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
+
+func Time(t time.Time) *dynamodb.AttributeValue {
+	av, _ := dynamodbattribute.Marshal(t)
+	return av
+}
 
 func ToDynamoDBType(t reflect.Type) (string, error) {
 	switch t.Kind() {
