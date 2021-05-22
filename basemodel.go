@@ -200,3 +200,20 @@ func (b *BaseModel) Get(id interface{}, secondary ...interface{}) (interface{}, 
 	}
 	return v.Interface(), nil
 }
+
+func (b *BaseModel) Update(key map[string]*dynamodb.AttributeValue, updator string, args map[string]*dynamodb.AttributeValue) (int64, error) {
+	_, e := b.Client.UpdateItem(&dynamodb.UpdateItemInput{
+		TableName:                 &b.TableName,
+		Key:                       key,
+		UpdateExpression:          &updator,
+		ExpressionAttributeValues: args,
+		ConditionExpression:       aws.String(`attribute_exists(` + b.dbTags[0] + `)`),
+	})
+	if e != nil {
+		if e == ErrConditionalCheckFail {
+			return 0, nil
+		}
+		return 0, e
+	}
+	return 1, nil
+}
