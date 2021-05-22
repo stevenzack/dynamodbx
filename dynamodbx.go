@@ -1,6 +1,14 @@
 package dynamodbx
 
-import "github.com/iancoleman/strcase"
+import (
+	"errors"
+
+	"github.com/iancoleman/strcase"
+)
+
+var(
+	ErrItemNotFound=errors.New("Item not found")
+)
 
 func ToTableName(s string) string {
 	return strcase.ToLowerCamel(s)

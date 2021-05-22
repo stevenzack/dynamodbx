@@ -129,21 +129,21 @@ func NewBaseModel(region string, data interface{}) (*BaseModel, error) {
 	for _, idx := range tableInfo.Table.GlobalSecondaryIndexes {
 		remoteIndexes[*idx.IndexName] = struct{}{}
 		if _, ok := localIndexes[*idx.IndexName]; !ok {
-			log.Println("Remote index to be dropped: ", b.TableName+"."+*idx.IndexName)
+			return nil, errors.New("Remote index to be dropped: " + b.TableName + "." + *idx.IndexName)
 		}
 	}
 
 	//create index
-	for k, _ := range localIndexes {
+	for k := range localIndexes {
 		if _, ok := remoteIndexes[k]; !ok {
-			log.Println("Remote index to be created: ", b.TableName, ".", k)
+			return nil, errors.New("Remote index to be created: " + b.TableName + "." + k)
 		}
 	}
 
 	return b, nil
 }
 
-func (b *BaseModel) Insert(v interface{}) error {
+func (b *BaseModel) Put(v interface{}) error {
 	av, e := dynamodbattribute.MarshalMap(v)
 	if e != nil {
 		return e
@@ -153,4 +153,37 @@ func (b *BaseModel) Insert(v interface{}) error {
 		TableName: aws.String(b.TableName),
 	})
 	return e
+}
+
+func (b *BaseModel) Get(id interface{}, secondary ...interface{}) (interface{}, error) {
+	key := make(map[string]*dynamodb.AttributeValue)
+	var e error
+	key[b.dbTags[0]], e = dynamodbattribute.Marshal(id)
+	if e != nil {
+		return nil, e
+	}
+	if len(secondary) > 0 {
+		key[b.dbTags[b.secondary]], e = dynamodbattribute.Marshal(secondary[0])
+		if e != nil {
+			return nil, e
+		}
+	}
+	res, e := b.Client.GetItem(&dynamodb.GetItemInput{
+		TableName: &b.TableName,
+		Key:       key,
+	})
+	if e != nil {
+		return nil, e
+	}
+
+	if len(res.Item) == 0 {
+		return nil, ErrItemNotFound
+	}
+
+	v := reflect.New(b.Type)
+	e = dynamodbattribute.UnmarshalMap(res.Item, v.Interface())
+	if e != nil {
+		return nil, e
+	}
+	return v.Interface(), nil
 }
