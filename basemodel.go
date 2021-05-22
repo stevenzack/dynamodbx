@@ -155,6 +155,19 @@ func (b *BaseModel) Put(v interface{}) error {
 	return e
 }
 
+func (b *BaseModel) Insert(v interface{}) error {
+	av, e := dynamodbattribute.MarshalMap(v)
+	if e != nil {
+		return e
+	}
+	_, e = b.Client.PutItem(&dynamodb.PutItemInput{
+		TableName:           &b.TableName,
+		Item:                av,
+		ConditionExpression: aws.String(`attribute_not_exists(` + b.dbTags[0] + `)`),
+	})
+	return e
+}
+
 func (b *BaseModel) Get(id interface{}, secondary ...interface{}) (interface{}, error) {
 	key := make(map[string]*dynamodb.AttributeValue)
 	var e error
