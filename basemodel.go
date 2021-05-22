@@ -36,7 +36,7 @@ func NewBaseModel(region string, data interface{}) (*BaseModel, error) {
 	b := &BaseModel{
 		Type:      t,
 		secondary: -1,
-		TableName: t.Name(),
+		TableName: ToTableName(t.Name()),
 	}
 
 	if t.NumField() == 0 {
