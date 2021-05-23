@@ -209,6 +209,7 @@ func (b *BaseModel) FindWhere(key string, value interface{}) (interface{}, error
 
 	res, e := b.Client.Query(&dynamodb.QueryInput{
 		TableName:              &b.TableName,
+		IndexName:              aws.String("idx_" + key),
 		KeyConditionExpression: aws.String("#" + key + "=:" + key),
 		ExpressionAttributeNames: map[string]*string{
 			"#" + key: &key,
