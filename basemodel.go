@@ -210,7 +210,7 @@ func (b *BaseModel) Update(key map[string]*dynamodb.AttributeValue, updator stri
 		ConditionExpression:       aws.String(`attribute_exists(` + b.dbTags[0] + `)`),
 	})
 	if e != nil {
-		if e == ErrConditionalCheckFail {
+		if e.Error() == ErrConditionalCheckFail.Error() {
 			return 0, nil
 		}
 		return 0, e
