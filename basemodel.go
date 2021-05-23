@@ -201,6 +201,37 @@ func (b *BaseModel) Get(id interface{}, secondary ...interface{}) (interface{}, 
 	return v.Interface(), nil
 }
 
+func (b *BaseModel) FindWhere(key string, value interface{}) (interface{}, error) {
+	av, e := dynamodbattribute.Marshal(value)
+	if e != nil {
+		return nil, e
+	}
+
+	res, e := b.Client.Query(&dynamodb.QueryInput{
+		TableName:              &b.TableName,
+		KeyConditionExpression: aws.String("#" + key + "=:" + key),
+		ExpressionAttributeNames: map[string]*string{
+			"#" + key: &key,
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":" + key: av,
+		},
+		Limit: aws.Int64(1),
+	})
+	if e != nil {
+		return nil, e
+	}
+	if len(res.Items) == 0 {
+		return nil, ErrItemNotFound
+	}
+	v := reflect.New(b.Type)
+	e = dynamodbattribute.UnmarshalMap(res.Items[0], v.Interface())
+	if e != nil {
+		return nil, e
+	}
+	return v.Interface(), nil
+}
+
 func (b *BaseModel) Update(key map[string]*dynamodb.AttributeValue, updator string, args map[string]*dynamodb.AttributeValue) (int64, error) {
 	_, e := b.Client.UpdateItem(&dynamodb.UpdateItemInput{
 		TableName:                 &b.TableName,
