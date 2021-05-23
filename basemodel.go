@@ -262,3 +262,35 @@ func (b *BaseModel) UpdateWhere(input *dynamodb.UpdateItemInput) (int64, error) 
 	}
 	return 1, nil
 }
+
+func (b *BaseModel) UpdateKv(id interface{}, k string, v interface{}) (int64, error) {
+	idav, e := dynamodbattribute.Marshal(id)
+	if e != nil {
+		return 0, e
+	}
+	av, e := dynamodbattribute.Marshal(v)
+	if e != nil {
+		return 0, e
+	}
+	_, e = b.Client.UpdateItem(&dynamodb.UpdateItemInput{
+		TableName: &b.TableName,
+		Key: map[string]*dynamodb.AttributeValue{
+			b.dbTags[0]: idav,
+		},
+		UpdateExpression: aws.String(`set #` + k + `=:` + k),
+		ExpressionAttributeNames: map[string]*string{
+			"#" + k: aws.String(k),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":" + k: av,
+		},
+		ConditionExpression: aws.String("attribute_exists(" + b.dbTags[0] + ")"),
+	})
+	if e != nil {
+		if e.Error() == ErrConditionalCheckFail.Error() {
+			return 0, nil
+		}
+		return 0, e
+	}
+	return 1, nil
+}
