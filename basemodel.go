@@ -263,6 +263,19 @@ func (b *BaseModel) UpdateWhere(input *dynamodb.UpdateItemInput) (int64, error) 
 	return 1, nil
 }
 
+func (b *BaseModel) UpdateWhereReturnAllOld(input *dynamodb.UpdateItemInput) (int64, *dynamodb.UpdateItemOutput, error) {
+	input.TableName = &b.TableName
+	input.ConditionExpression = aws.String(`attribute_exists(` + b.dbTags[0] + `)`)
+	res, e := b.Client.UpdateItem(input)
+	if e != nil {
+		if e.Error() == ErrConditionalCheckFail.Error() {
+			return 0, res, nil
+		}
+		return 0, res, e
+	}
+	return 1, res, nil
+}
+
 func (b *BaseModel) UpdateKv(id interface{}, k string, v interface{}) (int64, error) {
 	idav, e := dynamodbattribute.Marshal(id)
 	if e != nil {
