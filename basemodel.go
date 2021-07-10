@@ -250,20 +250,7 @@ func (b *BaseModel) Update(key map[string]*dynamodb.AttributeValue, updator stri
 	return 1, nil
 }
 
-func (b *BaseModel) UpdateWhere(input *dynamodb.UpdateItemInput) (int64, error) {
-	input.TableName = &b.TableName
-	input.ConditionExpression = aws.String(`attribute_exists(` + b.dbTags[0] + `)`)
-	_, e := b.Client.UpdateItem(input)
-	if e != nil {
-		if e.Error() == ErrConditionalCheckFail.Error() {
-			return 0, nil
-		}
-		return 0, e
-	}
-	return 1, nil
-}
-
-func (b *BaseModel) UpdateWhereReturnAllOld(input *dynamodb.UpdateItemInput) (int64, *dynamodb.UpdateItemOutput, error) {
+func (b *BaseModel) UpdateWhere(input *dynamodb.UpdateItemInput) (int64, *dynamodb.UpdateItemOutput, error) {
 	input.TableName = &b.TableName
 	input.ConditionExpression = aws.String(`attribute_exists(` + b.dbTags[0] + `)`)
 	res, e := b.Client.UpdateItem(input)
