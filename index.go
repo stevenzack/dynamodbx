@@ -20,9 +20,9 @@ func ToIndexName(key []*dynamodb.KeySchemaElement) string {
 		}
 	}
 	if secondary != "" {
-		secondary = "_" + secondary
+		secondary = "-" + secondary
 	}
-	return "idx_" + hash + secondary
+	return hash + secondary + "-index"
 }
 
 func (b *BaseModel) GetIndexes() ([]*dynamodb.GlobalSecondaryIndexDescription, error) {

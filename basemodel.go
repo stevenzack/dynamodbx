@@ -31,6 +31,14 @@ const (
 	TAG_SECONDARY_FOR = "secondaryfor"
 )
 
+func MustCreateBaseModel(region string, data interface{}) *BaseModel {
+	v, e := NewBaseModel(region, data)
+	if e != nil {
+		log.Fatal(e)
+	}
+	return v
+}
+
 func NewBaseModel(region string, data interface{}) (*BaseModel, error) {
 	t := reflect.TypeOf(data)
 	b := &BaseModel{
@@ -70,7 +78,7 @@ func NewBaseModel(region string, data interface{}) (*BaseModel, error) {
 		}
 
 		//dbTag
-		dbTag, ok := field.Tag.Lookup("dynamodbav")
+		dbTag, ok := field.Tag.Lookup(TAG)
 		if !ok {
 			dbTag = field.Name
 		} else {
@@ -201,6 +209,38 @@ func (b *BaseModel) Get(id interface{}, secondary ...interface{}) (interface{}, 
 	return v.Interface(), nil
 }
 
+func (b *BaseModel) FindWhere2(key, orderKey string, value interface{}) (interface{}, error) {
+	av, e := dynamodbattribute.Marshal(value)
+	if e != nil {
+		return nil, e
+	}
+
+	res, e := b.Client.Query(&dynamodb.QueryInput{
+		TableName:              &b.TableName,
+		IndexName:              aws.String(key + "-" + orderKey + "-index"),
+		KeyConditionExpression: aws.String("#" + key + "=:" + key),
+		ExpressionAttributeNames: map[string]*string{
+			"#" + key: &key,
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":" + key: av,
+		},
+		Limit: aws.Int64(1),
+	})
+	if e != nil {
+		return nil, e
+	}
+	if len(res.Items) == 0 {
+		return nil, ErrItemNotFound
+	}
+	v := reflect.New(b.Type)
+	e = dynamodbattribute.UnmarshalMap(res.Items[0], v.Interface())
+	if e != nil {
+		return nil, e
+	}
+	return v.Interface(), nil
+}
+
 func (b *BaseModel) FindWhere(key string, value interface{}) (interface{}, error) {
 	av, e := dynamodbattribute.Marshal(value)
 	if e != nil {
@@ -209,7 +249,7 @@ func (b *BaseModel) FindWhere(key string, value interface{}) (interface{}, error
 
 	res, e := b.Client.Query(&dynamodb.QueryInput{
 		TableName:              &b.TableName,
-		IndexName:              aws.String("idx_" + key),
+		IndexName:              aws.String(key + "-index"),
 		KeyConditionExpression: aws.String("#" + key + "=:" + key),
 		ExpressionAttributeNames: map[string]*string{
 			"#" + key: &key,

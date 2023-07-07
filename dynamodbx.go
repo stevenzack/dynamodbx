@@ -13,7 +13,7 @@ var (
 )
 
 func ToTableName(s string) string {
-	return strcase.ToLowerCamel(s)
+	return strcase.ToSnake(s)
 }
 
 func AddStringToSet(attributes map[string]*dynamodb.AttributeValue, k, v string) ([]string, bool) {
